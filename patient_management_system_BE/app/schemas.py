@@ -1,22 +1,14 @@
-from __future__ import annotations
-from datetime import datetime
-from typing import Optional
-from pydantic import BaseModel, EmailStr, Field, field_validator
-from .models import AppointmentStatus, Role
+from datetime import datetime, time
+
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
+
+from app.db.models import AppointmentStatus, UserRole
 
 
-class RegisterRequest(BaseModel):
-    name: str = Field(min_length=2, max_length=120)
-    email: EmailStr
-    password: str = Field(min_length=8, max_length=128)
-    role: Role = Role.patient
-
-    @field_validator("role")
-    @classmethod
-    def patients_self_register_only(cls, value: Role) -> Role:
-        if value != Role.patient:
-            raise ValueError("Only patients can self-register")
-        return value
+class Token(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    user: "UserRead"
 
 
 class LoginRequest(BaseModel):
@@ -24,30 +16,72 @@ class LoginRequest(BaseModel):
     password: str
 
 
-class UserOut(BaseModel):
-    id: int
-    name: str
+class RegisterPatient(BaseModel):
     email: EmailStr
-    role: Role
-    specialty: Optional[str]
-    model_config = {"from_attributes": True}
+    password: str = Field(min_length=8)
+    first_name: str
+    last_name: str
+    phone: str | None = None
 
 
-class AuthOut(BaseModel):
-    access_token: str
-    token_type: str = "bearer"
-    user: UserOut
+class AvailabilityCreate(BaseModel):
+    day_of_week: int = Field(ge=0, le=6)
+    start_time: time
+    end_time: time
 
 
-class DoctorOut(BaseModel):
+class RegisterDoctor(BaseModel):
+    email: EmailStr
+    password: str = Field(min_length=8)
+    first_name: str
+    last_name: str
+    specialty: str
+    availability: list[AvailabilityCreate] = []
+
+
+class PatientUpdate(BaseModel):
+    first_name: str
+    last_name: str
+    phone: str | None = None
+
+
+class DoctorUpdate(BaseModel):
+    first_name: str
+    last_name: str
+    specialty: str
+    availability: list[AvailabilityCreate] = []
+
+
+class UserRead(BaseModel):
     id: int
+    email: EmailStr
+    role: UserRole
+    profile_id: int
     name: str
-    specialty: Optional[str]
-    model_config = {"from_attributes": True}
 
 
-class SlotOut(BaseModel):
-    starts_at: datetime
+class AvailabilityRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    day_of_week: int
+    start_time: time
+    end_time: time
+
+
+class DoctorRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    first_name: str
+    last_name: str
+    specialty: str
+    availability: list[AvailabilityRead] = []
+
+
+class SlotRead(BaseModel):
+    slot_time: datetime
+    available: bool
 
 
 class AppointmentCreate(BaseModel):
@@ -55,13 +89,42 @@ class AppointmentCreate(BaseModel):
     slot_time: datetime
 
 
-class AppointmentOut(BaseModel):
+class AppointmentRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
-    patient_id: int
     doctor_id: int
+    patient_id: int
     slot_time: datetime
     status: AppointmentStatus
-    patient_name: str
     doctor_name: str
-    specialty: Optional[str]
+    patient_name: str
 
+
+class DoctorPatientRead(BaseModel):
+    patient_id: int
+    patient_name: str
+    phone: str | None = None
+    email: EmailStr
+    total_visits: int
+    next_visit: datetime | None = None
+    last_visit: datetime | None = None
+
+
+class DoctorRecordRead(BaseModel):
+    appointment_id: int
+    patient_id: int
+    patient_name: str
+    slot_time: datetime
+    status: AppointmentStatus
+    summary: str
+
+
+class DoctorStatsRead(BaseModel):
+    today_appointments: int
+    week_appointments: int
+    total_patients: int
+    completed_consultations: int
+
+
+Token.model_rebuild()
