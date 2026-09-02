@@ -1,0 +1,29 @@
+# Frontend dependencies and build output
+patient_management_syetem_FE/node_modules/
+patient_management_syetem_FE/dist/
+patient_management_syetem_FE/.vite/
+
+# Python environments, caches, and test output
+patient_management_system_BE/.venv/
+patient_management_system_BE/venv/
+patient_management_system_BE/__pycache__/
+patient_management_system_BE/**/*.py[cod]
+patient_management_system_BE/.pytest_cache/
+patient_management_system_BE/.mypy_cache/
+patient_management_system_BE/.coverage
+patient_management_system_BE/htmlcov/
+
+# Environment and local configuration
+.env
+.env.*
+!.env.example
+
+# Local databases and logs
+*.sqlite
+*.sqlite3
+*.db
+*.log
+
+# Operating system files
+.DS_Store
+Thumbs.db
