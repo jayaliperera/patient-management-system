@@ -1,10 +1,10 @@
-import { ArrowRight, Search } from "lucide-react";
+import { ArrowRight, HeartPulse, Search } from "lucide-react";
 
 export default function PatientHero({ firstName, onFindDoctors }) {
   return (
     <section className="patient-hero-card">
       <div className="patient-hero-copy">
-        <span>Patient Channeling</span>
+        <span><HeartPulse size={18} /> Patient Channeling</span>
         <h1>Hello, {firstName}!</h1>
         <p>Choose a specialist, review their profile, and secure a clean 30-minute appointment slot.</p>
         <button className="primary-action" onClick={onFindDoctors}><Search size={18} /> Find a Doctor <ArrowRight size={18} /></button>

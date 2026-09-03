@@ -1,4 +1,4 @@
-import { BadgeCheck, CalendarDays, Star, User } from "lucide-react";
+import { BadgeCheck, CalendarDays, Coins, Clock, Star, User } from "lucide-react";
 import { doctorImage } from "../../../lib/doctorAssets";
 import { doctorMeta } from "../../../lib/doctorMeta";
 
@@ -25,8 +25,8 @@ export default function FeaturedDoctorCard({ doctor, selected, onSelect, onProfi
           <p>{doctor.specialty} at {meta.hospital}</p>
           <div className="mini-meta">
             <span><Star size={14} /> {meta.rating}</span>
-            <span>Rs. {meta.fee}</span>
-            <span>{meta.experience} yrs</span>
+            <span><Coins size={14} /> Rs. {meta.fee}</span>
+            <span><Clock size={14} /> {meta.experience} yrs</span>
           </div>
         </div>
       </div>

@@ -1,4 +1,4 @@
-import { CalendarDays, History, CalendarX } from "lucide-react";
+import { CalendarDays, History, CalendarX, XCircle } from "lucide-react";
 import { formatWhen } from "../../../lib/date";
 
 export default function PatientAppointmentsPanel({ tab, setTab, appointments, history, onCancel }) {
@@ -18,7 +18,7 @@ export default function PatientAppointmentsPanel({ tab, setTab, appointments, hi
               <span>{formatWhen(item.slot_time)}</span>
             </div>
             <span className={`status ${item.status.toLowerCase()}`}>{item.status}</span>
-            {tab === "upcoming" && <button className="danger" onClick={() => onCancel(item.id)}>Cancel</button>}
+            {tab === "upcoming" && <button className="danger" onClick={() => onCancel(item.id)}><XCircle size={16} /> Cancel</button>}
           </article>
         ))}
         {!items.length && (

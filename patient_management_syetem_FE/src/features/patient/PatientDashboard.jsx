@@ -103,40 +103,42 @@ export default function PatientDashboard({ session, setSession, notify }) {
           setActiveView={setActiveView}
           activeView={activeView}
         />
-        {activeView === "dashboard" && (
-          <>
-            <PatientHero firstName={session.user.name.split(" ")[0]} onFindDoctors={() => setActiveView("findDoctors")} />
-            <PatientStats appointmentsCount={appointments.length} doctorsCount={doctors.length} />
-          </>
-        )}
-        {["dashboard", "findDoctors"].includes(activeView) && (
-          <section className="patient-workbench">
-            <DoctorFinderPanel
-              query={query}
-              setQuery={setQuery}
-              specialty={specialty}
-              setSpecialty={setSpecialty}
-              doctors={filteredDoctors}
-              selected={featuredDoctor}
-              setSelected={setSelected}
-              openProfile={setProfileDoctor}
-              onViewAll={() => setActiveView("findDoctors")}
-            />
-            <AvailabilityPanel selected={selected} date={date} setDate={setDate} slots={slots} onBook={book} />
-            <PatientAppointmentsPanel tab={tab} setTab={setTab} appointments={appointments} history={history} onCancel={cancel} />
-          </section>
-        )}
-        {activeView === "appointments" && (
-          <section className="patient-workbench single-view">
-            <PatientAppointmentsPanel tab={tab} setTab={setTab} appointments={appointments} history={history} onCancel={cancel} />
-          </section>
-        )}
-        {activeView === "profile" && (
-          <PatientProfilePage session={session} setSession={setSession} notify={notify} />
-        )}
-        {["records", "notifications", "settings"].includes(activeView) && (
-          <PatientSimplePage view={activeView} onLogout={() => setSession(null)} />
-        )}
+        <div className="patient-content">
+          {activeView === "dashboard" && (
+            <>
+              <PatientHero firstName={session.user.name.split(" ")[0]} onFindDoctors={() => setActiveView("findDoctors")} />
+              <PatientStats appointmentsCount={appointments.length} doctorsCount={doctors.length} />
+            </>
+          )}
+          {["dashboard", "findDoctors"].includes(activeView) && (
+            <section className="patient-workbench">
+              <DoctorFinderPanel
+                query={query}
+                setQuery={setQuery}
+                specialty={specialty}
+                setSpecialty={setSpecialty}
+                doctors={filteredDoctors}
+                selected={featuredDoctor}
+                setSelected={setSelected}
+                openProfile={setProfileDoctor}
+                onViewAll={() => setActiveView("findDoctors")}
+              />
+              <AvailabilityPanel selected={selected} date={date} setDate={setDate} slots={slots} onBook={book} />
+              <PatientAppointmentsPanel tab={tab} setTab={setTab} appointments={appointments} history={history} onCancel={cancel} />
+            </section>
+          )}
+          {activeView === "appointments" && (
+            <section className="patient-workbench single-view">
+              <PatientAppointmentsPanel tab={tab} setTab={setTab} appointments={appointments} history={history} onCancel={cancel} />
+            </section>
+          )}
+          {activeView === "profile" && (
+            <PatientProfilePage session={session} setSession={setSession} notify={notify} />
+          )}
+          {["records", "notifications", "settings"].includes(activeView) && (
+            <PatientSimplePage view={activeView} onLogout={() => setSession(null)} />
+          )}
+        </div>
       </main>
 
       {profileDoctor && <DoctorProfileModal doctor={profileDoctor} onClose={() => setProfileDoctor(null)} onSelect={() => { setSelected(profileDoctor); setProfileDoctor(null); }} />}
