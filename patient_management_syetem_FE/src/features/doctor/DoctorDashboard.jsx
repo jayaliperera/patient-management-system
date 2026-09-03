@@ -6,6 +6,7 @@ import DoctorAppointmentsPage from "./components/DoctorAppointmentsPage";
 import DoctorHeader from "./components/DoctorHeader";
 import DoctorHero from "./components/DoctorHero";
 import DoctorPatientsPage from "./components/DoctorPatientsPage";
+import DoctorProfilePage from "./components/DoctorProfilePage";
 import DoctorProfileOverview from "./components/DoctorProfileOverview";
 import DoctorRecordsPage from "./components/DoctorRecordsPage";
 import DoctorSchedulePanel from "./components/DoctorSchedulePanel";
@@ -66,7 +67,8 @@ export default function DoctorDashboard({ session, setSession, notify }) {
 
   function stepDate(direction) {
     const next = new Date(`${date}T00:00:00`);
-    next.setDate(next.getDate() + direction * (view === "week" ? 7 : 1));
+    if (view === "month") next.setMonth(next.getMonth() + direction);
+    else next.setDate(next.getDate() + direction * (view === "week" ? 7 : 1));
     setDate(next.toISOString().slice(0, 10));
   }
 
@@ -86,40 +88,73 @@ export default function DoctorDashboard({ session, setSession, notify }) {
           setActiveView={setActiveView}
           onEditProfile={() => setEditing(true)}
         />
-        {activeView === "console" && (
-          <>
-            <DoctorHero session={session} profile={profile} onEditProfile={() => setEditing(true)} />
-            <section className="doctor-workbench">
-              <DoctorProfileOverview profile={profile} session={session} onEditProfile={() => setEditing(true)} />
-              <DoctorSchedulePanel view={view} setView={setView} date={date} setDate={setDate} grouped={grouped} onStepDate={stepDate} />
-            </section>
-            <DoctorStats
-              todayCount={stats.today_appointments}
-              totalPatients={stats.total_patients}
-              monthCount={stats.completed_consultations}
+        <div className="doctor-content">
+          {activeView === "console" && (
+            <>
+              <DoctorHero session={session} profile={profile} onEditProfile={() => setEditing(true)} />
+              <section className="doctor-workbench">
+                <DoctorProfileOverview profile={profile} session={session} onEditProfile={() => setEditing(true)} />
+                <DoctorSchedulePanel
+                  view={view}
+                  setView={setView}
+                  date={date}
+                  setDate={setDate}
+                  grouped={grouped}
+                  onStepDate={stepDate}
+                  onAddAvailability={() => setActiveView("settings")}
+                  notify={notify}
+                />
+              </section>
+              <DoctorStats
+                todayCount={stats.today_appointments}
+                totalPatients={stats.total_patients}
+                monthCount={stats.completed_consultations}
+              />
+            </>
+          )}
+          {activeView === "profile" && (
+            <DoctorProfilePage
+              profile={profile}
+              session={session}
+              onEditProfile={() => setEditing(true)}
+              onNavigate={setActiveView}
+              notify={notify}
             />
-          </>
-        )}
-        {activeView === "profile" && <DoctorProfileOverview profile={profile} session={session} onEditProfile={() => setEditing(true)} />}
-        {["schedule", "appointments"].includes(activeView) && (
-          activeView === "schedule"
-            ? <DoctorSchedulePanel view={view} setView={setView} date={date} setDate={setDate} grouped={grouped} onStepDate={stepDate} />
-            : <DoctorAppointmentsPage notify={notify} onStatsChanged={() => { loadSchedule(); loadStats(); }} />
-        )}
-        {activeView === "patients" && <DoctorPatientsPage notify={notify} />}
-        {activeView === "records" && <DoctorRecordsPage notify={notify} />}
-        {activeView === "settings" && profile && (
-          <DoctorSettingsPage
-            profile={profile}
-            notify={notify}
-            onLogout={() => setSession(null)}
-            onSaved={(updated) => {
-              setProfile(updated);
-              setSession({ ...session, user: { ...session.user, name: `Dr. ${updated.first_name} ${updated.last_name}` } });
-              loadStats();
-            }}
-          />
-        )}
+          )}
+          {["schedule", "appointments"].includes(activeView) && (
+            activeView === "schedule"
+              ? (
+                <DoctorSchedulePanel
+                  view={view}
+                  setView={setView}
+                  date={date}
+                  setDate={setDate}
+                  grouped={grouped}
+                  onStepDate={stepDate}
+                  fullPage
+                  onAddAvailability={() => setActiveView("settings")}
+                  notify={notify}
+                />
+              )
+              : <DoctorAppointmentsPage notify={notify} onNavigate={setActiveView} onStatsChanged={() => { loadSchedule(); loadStats(); }} />
+          )}
+          {activeView === "patients" && <DoctorPatientsPage notify={notify} />}
+          {activeView === "records" && <DoctorRecordsPage notify={notify} />}
+          {activeView === "settings" && profile && (
+            <DoctorSettingsPage
+              profile={profile}
+              session={session}
+              notify={notify}
+              onLogout={() => setSession(null)}
+              onNavigate={setActiveView}
+              onSaved={(updated) => {
+                setProfile(updated);
+                setSession({ ...session, user: { ...session.user, name: `Dr. ${updated.first_name} ${updated.last_name}` } });
+                loadStats();
+              }}
+            />
+          )}
+        </div>
       </main>
 
       {editing && profile && (

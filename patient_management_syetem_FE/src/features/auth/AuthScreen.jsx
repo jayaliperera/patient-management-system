@@ -165,7 +165,7 @@ export default function AuthScreen({ mode, setMode, setSession, notify }) {
 
 function IconField({ icon, trailing, label, children }) {
   return (
-    <label className="icon-field">
+    <label className={`icon-field ${trailing ? "has-trailing" : ""}`}>
       {label}
       <span>
         {icon}
