@@ -1,4 +1,4 @@
-import { Check, X } from "lucide-react";
+import { Check, Stethoscope, User, X } from "lucide-react";
 import { useState } from "react";
 import { api, apiError } from "../api";
 import { blankAvailability } from "../lib/constants";
@@ -31,12 +31,12 @@ export default function DoctorEditModal({ profile, onClose, notify, onSaved }) {
     <div className="modal-backdrop" onMouseDown={onClose}>
       <form className="profile-modal" onSubmit={save} onMouseDown={(event) => event.stopPropagation()}>
         <button type="button" className="modal-close" onClick={onClose}><X size={18} /></button>
-        <h2>Edit Doctor Profile</h2>
+        <h2><Stethoscope size={22} /> Edit Doctor Profile</h2>
         <div className="two-col">
-          <label>First name<input value={form.first_name} onChange={(event) => setForm({ ...form, first_name: event.target.value })} required /></label>
-          <label>Last name<input value={form.last_name} onChange={(event) => setForm({ ...form, last_name: event.target.value })} required /></label>
+          <label>First name<span className="settings-readonly-field editable-field"><User size={18} /><input value={form.first_name} onChange={(event) => setForm({ ...form, first_name: event.target.value })} required /></span></label>
+          <label>Last name<span className="settings-readonly-field editable-field"><User size={18} /><input value={form.last_name} onChange={(event) => setForm({ ...form, last_name: event.target.value })} required /></span></label>
         </div>
-        <label>Specialty<input value={form.specialty} onChange={(event) => setForm({ ...form, specialty: event.target.value })} required /></label>
+        <label>Specialty<span className="settings-readonly-field editable-field"><Stethoscope size={18} /><input value={form.specialty} onChange={(event) => setForm({ ...form, specialty: event.target.value })} required /></span></label>
         <AvailabilityEditor availability={form.availability} setAvailability={(availability) => setForm({ ...form, availability })} />
         <button className="primary-action"><Check size={18} /> Save changes</button>
       </form>

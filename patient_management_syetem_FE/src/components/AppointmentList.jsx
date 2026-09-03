@@ -1,4 +1,5 @@
 import { formatWhen } from "../lib/date";
+import { CalendarX, XCircle } from "lucide-react";
 
 export default function AppointmentList({ items, canCancel, onCancel }) {
   return (
@@ -10,10 +11,15 @@ export default function AppointmentList({ items, canCancel, onCancel }) {
             <span>{formatWhen(item.slot_time)}</span>
           </div>
           <span className={`status ${item.status.toLowerCase()}`}>{item.status}</span>
-          {canCancel && <button className="danger" onClick={() => onCancel(item.id)}>Cancel</button>}
+          {canCancel && <button className="danger" onClick={() => onCancel(item.id)}><XCircle size={16} /> Cancel</button>}
         </article>
       ))}
-      {!items.length && <p className="empty">No appointments in this view.</p>}
+      {!items.length && (
+        <div className="empty inline-empty">
+          <CalendarX size={34} />
+          <span>No appointments in this view.</span>
+        </div>
+      )}
     </div>
   );
 }
