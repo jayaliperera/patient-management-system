@@ -30,15 +30,24 @@ def edit_my_profile(
 
 @router.get("/me/schedule", response_model=list[AppointmentRead])
 def my_schedule(
-    view: str = Query(default="day", pattern="^(day|week)$"),
+    view: str = Query(default="day", pattern="^(day|week|month)$"),
     on: date | None = None,
     current_user: User = Depends(require_doctor),
     db: Session = Depends(get_db),
 ):
     selected = on or date.today()
-    start_date = selected if view == "day" else selected - timedelta(days=selected.weekday())
+    if view == "day":
+        start_date = selected
+        days = 1
+    elif view == "week":
+        start_date = selected - timedelta(days=selected.weekday())
+        days = 7
+    else:
+        start_date = selected.replace(day=1)
+        next_month = start_date.replace(year=start_date.year + 1, month=1) if start_date.month == 12 else start_date.replace(month=start_date.month + 1)
+        days = (next_month - start_date).days
     start = datetime.combine(start_date, time.min).replace(tzinfo=timezone.utc)
-    end = start + timedelta(days=1 if view == "day" else 7)
+    end = start + timedelta(days=days)
     query = (
         select(Appointment)
         .where(

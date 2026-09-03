@@ -96,13 +96,23 @@ def update_doctor_profile(db: Session, doctor: Doctor, payload: DoctorUpdate) ->
     doctor.last_name = payload.last_name
     doctor.specialty = payload.specialty
     doctor.availability.clear()
+    db.flush()
+    seen_windows: set[tuple[int, time, time]] = set()
     for item in payload.availability:
         if item.start_time >= item.end_time:
             raise HTTPException(status_code=422, detail="Availability start_time must be before end_time")
+        key = (item.day_of_week, item.start_time, item.end_time)
+        if key in seen_windows:
+            continue
+        seen_windows.add(key)
         doctor.availability.append(
             DoctorAvailability(day_of_week=item.day_of_week, start_time=item.start_time, end_time=item.end_time)
         )
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError as exc:
+        db.rollback()
+        raise HTTPException(status_code=409, detail="Availability already exists for this doctor") from exc
     db.refresh(doctor)
     return doctor
 
