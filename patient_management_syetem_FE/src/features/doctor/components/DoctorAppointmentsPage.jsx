@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
-import { CalendarCheck, CheckCircle, ChevronLeft, ChevronRight, Clock, Search, XCircle } from "lucide-react";
+import { CalendarCheck, CheckCircle, ChevronLeft, ChevronRight, Clock, RefreshCw, Search, XCircle } from "lucide-react";
 import { api, apiError } from "../../../api";
 import { formatWhen } from "../../../lib/date";
 
 export default function DoctorAppointmentsPage({ notify, onStatsChanged, onNavigate }) {
   const [status, setStatus] = useState("ALL");
   const [query, setQuery] = useState("");
+  const [dateRange, setDateRange] = useState("");
   const [appointments, setAppointments] = useState([]);
 
   useEffect(() => {
@@ -33,7 +34,11 @@ export default function DoctorAppointmentsPage({ notify, onStatsChanged, onNavig
     }
   }
 
-  const filtered = appointments.filter((item) => item.patient_name.toLowerCase().includes(query.toLowerCase()));
+  const filtered = appointments.filter((item) => {
+    const textMatch = item.patient_name.toLowerCase().includes(query.toLowerCase());
+    const dateMatch = matchesDateRange(item.slot_time, dateRange);
+    return textMatch && dateMatch;
+  });
   const today = new Date().toISOString().slice(0, 10);
   const counts = {
     today: appointments.filter((item) => item.slot_time.slice(0, 10) === today).length,
@@ -50,7 +55,10 @@ export default function DoctorAppointmentsPage({ notify, onStatsChanged, onNavig
           <h1>Appointments</h1>
           <p>View and manage your patient appointments, track consultation status, and stay organized.</p>
         </div>
-        <button type="button" className="primary-action" onClick={() => onNavigate("schedule")}><CalendarCheck size={18} /> View Schedule</button>
+        <div className="appointments-heading-actions">
+          <button type="button" className="ghost" onClick={loadAppointments}><RefreshCw size={18} /> Refresh</button>
+          <button type="button" className="primary-action" onClick={() => onNavigate("schedule")}><CalendarCheck size={18} /> View Schedule</button>
+        </div>
       </div>
 
       <section className="appointment-metrics">
@@ -74,7 +82,7 @@ export default function DoctorAppointmentsPage({ notify, onStatsChanged, onNavig
               <option value="COMPLETED">Completed</option>
               <option value="CANCELLED">Cancelled</option>
             </select>
-            <select defaultValue="">
+            <select value={dateRange} onChange={(event) => setDateRange(event.target.value)}>
               <option value="">Select date range</option>
               <option value="today">Today</option>
               <option value="week">This week</option>
@@ -124,6 +132,38 @@ export default function DoctorAppointmentsPage({ notify, onStatsChanged, onNavig
       </section>
     </section>
   );
+}
+
+function matchesDateRange(value, range) {
+  if (!range) return true;
+
+  const appointmentDate = new Date(value);
+  const now = new Date();
+  const start = new Date(now);
+  start.setHours(0, 0, 0, 0);
+
+  if (range === "today") {
+    const end = new Date(start);
+    end.setDate(start.getDate() + 1);
+    return appointmentDate >= start && appointmentDate < end;
+  }
+
+  if (range === "week") {
+    const day = (start.getDay() + 6) % 7;
+    start.setDate(start.getDate() - day);
+    const end = new Date(start);
+    end.setDate(start.getDate() + 7);
+    return appointmentDate >= start && appointmentDate < end;
+  }
+
+  if (range === "month") {
+    start.setDate(1);
+    const end = new Date(start);
+    end.setMonth(start.getMonth() + 1);
+    return appointmentDate >= start && appointmentDate < end;
+  }
+
+  return true;
 }
 
 function Metric({ icon: Icon, label, value, text, tone }) {

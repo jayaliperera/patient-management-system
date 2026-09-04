@@ -36,11 +36,11 @@ export default function DoctorProfilePage({ profile, session, onEditProfile, onN
   const rows = [
     { label: "Full Name", value: `Dr. ${profile.first_name} ${profile.last_name}`, icon: User },
     { label: "Email", value: session.user.email, icon: Mail },
-    { label: "Phone", value: "+94 77 123 4567", icon: Phone },
+    { label: "Phone", value: meta.phone, icon: Phone },
     { label: "Hospital", value: meta.hospital, icon: Building2 },
-    { label: "Specialty", value: profile.specialty, icon: Stethoscope },
+    { label: "Specialty", value: meta.specialty, icon: Stethoscope },
     { label: "Experience", value: `${meta.experience} years`, icon: BriefcaseMedical },
-    { label: "Registration No.", value: `SLMC ${67800 + (profile.id || 1)}`, icon: ClipboardCheck },
+    { label: "Registration No.", value: meta.registration, icon: ClipboardCheck },
   ];
 
   return (
@@ -59,10 +59,10 @@ export default function DoctorProfilePage({ profile, session, onEditProfile, onN
         <div className="doctor-profile-identity">
           <em>Active</em>
           <h1>Dr. {profile.first_name} {profile.last_name}</h1>
-          <p>Consultant {profile.specialty} <span>|</span> Reg. No: SLMC {67800 + (profile.id || 1)}</p>
+          <p>Consultant {meta.specialty} <span>|</span> Reg. No: {meta.registration}</p>
           <div className="doctor-profile-metrics">
             <article><Building2 size={24} /><strong>{meta.hospital}</strong><span>Hospital</span></article>
-            <article><Stethoscope size={24} /><strong>{profile.specialty}</strong><span>Specialty</span></article>
+            <article><Stethoscope size={24} /><strong>{meta.specialty}</strong><span>Specialty</span></article>
             <article><Star size={25} /><strong>{meta.rating}</strong><span>Patient Rating</span></article>
             <article><BriefcaseMedical size={25} /><strong>{meta.experience}+</strong><span>Years Experience</span></article>
           </div>
@@ -122,8 +122,7 @@ export default function DoctorProfilePage({ profile, session, onEditProfile, onN
                 <button type="button" className="doctor-mini-action" onClick={onEditProfile}><Pencil size={16} /> Edit</button>
               </div>
               <p>
-                I am a Consultant {profile.specialty} with over {meta.experience} years of experience in patient-centered care.
-                Committed to providing accurate diagnosis and personalized treatment plans for a healthier tomorrow.
+                {meta.bio || `Add a short professional bio so patients can understand your ${meta.specialty} experience and care approach.`}
               </p>
             </article>
           </div>

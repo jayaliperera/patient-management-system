@@ -13,7 +13,7 @@ export default function DoctorHero({ session, profile, onEditProfile }) {
         <h1>{displayName}</h1>
         <p>Specialist schedule and profile controls.</p>
         <div className="doctor-hero-metrics">
-          <article><Stethoscope size={28} /><strong>{profile?.specialty || "Specialty"}</strong><small>Specialty</small></article>
+          <article><Stethoscope size={28} /><strong>{meta.specialty}</strong><small>Specialty</small></article>
           <article><MapPin size={28} /><strong>{meta.hospital}</strong><small>Hospital</small></article>
           <article><Star size={28} /><strong>{meta.rating}</strong><small>Patient Rating</small></article>
         </div>

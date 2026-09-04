@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { Bell, Search, UserRound } from "lucide-react";
 import { doctorImage } from "../../../lib/doctorAssets";
+import { doctorMeta } from "../../../lib/doctorMeta";
 
 export default function DoctorHeader({ session, profile, setActiveView }) {
   const [query, setQuery] = useState("");
+  const meta = doctorMeta(profile);
 
   function submitSearch(event) {
     event.preventDefault();
@@ -30,7 +32,7 @@ export default function DoctorHeader({ session, profile, setActiveView }) {
           <img src={doctorImage(profile)} alt="" />
           <span>
             <strong>{session.user.name}</strong>
-            <small>{profile?.specialty || "Doctor"}</small>
+            <small>{meta.specialty}</small>
           </span>
           <UserRound size={18} />
         </button>

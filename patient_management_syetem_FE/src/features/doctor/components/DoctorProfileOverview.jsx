@@ -8,9 +8,9 @@ export default function DoctorProfileOverview({ profile, session, onEditProfile 
   const meta = doctorMeta(profile);
   const rows = [
     { label: "Hospital", value: meta.hospital, icon: MapPin },
-    { label: "Specialty", value: profile.specialty, icon: Stethoscope },
+    { label: "Specialty", value: meta.specialty, icon: Stethoscope },
     { label: "Experience", value: `${meta.experience} years`, icon: Clock },
-    { label: "Phone", value: "+94 77 123 4567", icon: Phone },
+    { label: "Phone", value: meta.phone, icon: Phone },
     { label: "Email", value: session.user.email, icon: Mail },
   ];
 
@@ -28,7 +28,7 @@ export default function DoctorProfileOverview({ profile, session, onEditProfile 
         <div>
           <em>Active</em>
           <strong>Dr. {profile.first_name} {profile.last_name}</strong>
-          <small>Consultant {profile.specialty}</small>
+          <small>Consultant {meta.specialty}</small>
         </div>
       </div>
       <div className="doctor-profile-rows">
