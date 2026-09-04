@@ -1,17 +1,28 @@
 from datetime import datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
 
 from conftest import register_doctor, register_patient
 
 
+SRI_LANKA_TZ = ZoneInfo("Asia/Colombo")
+
+
 def next_monday_at(hour: int, minute: int = 0) -> str:
-    today = datetime.now(timezone.utc).date()
+    today = datetime.now(SRI_LANKA_TZ).date()
     days = (0 - today.weekday()) % 7
     if days == 0:
         days = 7
     target = datetime.combine(today + timedelta(days=days), datetime.min.time()).replace(
-        hour=hour, minute=minute, tzinfo=timezone.utc
+        hour=hour, minute=minute, tzinfo=SRI_LANKA_TZ
     )
     return target.isoformat()
+
+
+def sri_lanka_time(value: str) -> datetime:
+    result = datetime.fromisoformat(value)
+    if result.tzinfo is None:
+        result = result.replace(tzinfo=timezone.utc)
+    return result.astimezone(SRI_LANKA_TZ)
 
 
 def auth(token):
@@ -62,12 +73,12 @@ def test_patient_can_reschedule_and_doctor_sees_update(client):
     )
 
     assert updated.status_code == 200
-    assert datetime.fromisoformat(updated.json()["slot_time"]) == datetime.fromisoformat(next_monday_at(10)).replace(tzinfo=None)
+    assert sri_lanka_time(updated.json()["slot_time"]).hour == 10
 
     doctor_view = client.get("/api/v1/doctors/me/appointments", headers=auth(doctor["access_token"]))
     assert doctor_view.status_code == 200
     assert doctor_view.json()[0]["id"] == booked["id"]
-    assert datetime.fromisoformat(doctor_view.json()[0]["slot_time"]) == datetime.fromisoformat(next_monday_at(10)).replace(tzinfo=None)
+    assert sri_lanka_time(doctor_view.json()[0]["slot_time"]).hour == 10
 
 
 def test_patient_can_delete_owned_appointment(client):

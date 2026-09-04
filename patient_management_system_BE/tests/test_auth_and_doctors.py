@@ -1,6 +1,10 @@
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 
 from conftest import register_doctor, register_patient
+
+
+SRI_LANKA_TZ = ZoneInfo("Asia/Colombo")
 
 
 def auth(token):
@@ -42,7 +46,7 @@ def test_doctor_search_slots_and_schedule(client):
     assert response.status_code == 200
     assert len(response.json()) == 1
 
-    today = datetime.now(timezone.utc).date()
+    today = datetime.now(SRI_LANKA_TZ).date()
     days = (0 - today.weekday()) % 7 or 7
     monday = today + timedelta(days=days)
     slots = client.get(f"/api/v1/doctors/{doctor['user']['profile_id']}/slots?date={monday.isoformat()}")
@@ -130,9 +134,9 @@ def test_doctor_profile_save_deduplicates_availability(client):
 def test_doctor_pages_use_real_appointment_data(client):
     patient = register_patient(client, "doctor-page-patient@example.com")
     doctor = register_doctor(client, "doctor-page-doctor@example.com")
-    today = datetime.now(timezone.utc).date()
+    today = datetime.now(SRI_LANKA_TZ).date()
     days = (0 - today.weekday()) % 7 or 7
-    slot = datetime.combine(today + timedelta(days=days), datetime.min.time()).replace(hour=10, tzinfo=timezone.utc)
+    slot = datetime.combine(today + timedelta(days=days), datetime.min.time()).replace(hour=10, tzinfo=SRI_LANKA_TZ)
 
     booked = client.post(
         "/api/v1/appointments",
