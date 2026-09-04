@@ -144,6 +144,14 @@ SECRET_KEY=replace-with-a-long-random-secret
 CORS_ORIGINS=["http://localhost:5173","http://127.0.0.1:5173"]
 ```
 
+For local development without PostgreSQL installed, you can use a project-local SQLite database:
+
+```env
+DATABASE_URL=sqlite:///./patient_management.db
+```
+
+When SQLite is used, the backend creates the local tables automatically on startup.
+
 Run database migrations:
 
 ```bash
