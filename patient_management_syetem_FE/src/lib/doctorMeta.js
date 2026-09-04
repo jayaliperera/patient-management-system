@@ -1,10 +1,15 @@
 export function doctorMeta(doctor) {
-  const seed = doctor?.id || 1;
+  const specialty = doctor?.specialty && /[a-z]/i.test(doctor.specialty) ? doctor.specialty : "Not set";
+
   return {
-    fee: 1800 + (seed % 5) * 350,
-    hospital: ["Nawaloka Care", "Asiri Central", "Lanka Hospitals", "Hemas Clinic", "MediPlus Center"][seed % 5],
-    rating: (4.5 + (seed % 4) / 10).toFixed(1),
-    experience: 6 + (seed % 16),
-    room: `Room ${120 + seed}`,
+    specialty,
+    fee: doctor?.consultation_fee ?? null,
+    hospital: doctor?.hospital || "Not set",
+    rating: Number(doctor?.rating || 0).toFixed(1),
+    experience: doctor?.experience_years ?? 0,
+    room: doctor?.room_number || "Not set",
+    phone: doctor?.phone || "Not set",
+    registration: doctor?.registration_number || "Not set",
+    bio: doctor?.bio || "",
   };
 }
