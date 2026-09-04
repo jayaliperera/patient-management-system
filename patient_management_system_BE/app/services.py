@@ -9,9 +9,7 @@ from app.core.security import create_access_token, hash_password, verify_passwor
 from app.db.models import Appointment, AppointmentStatus, Doctor, DoctorAvailability, Patient, User, UserRole
 from app.schemas import AppointmentRead, DoctorPatientRead, DoctorRecordRead, DoctorStatsRead, DoctorUpdate, PatientUpdate, RegisterDoctor, RegisterPatient, UserRead
 
-
 SLOT_MINUTES = 30
-
 
 def user_to_read(user: User) -> UserRead:
     if user.role == UserRole.PATIENT and user.patient:
