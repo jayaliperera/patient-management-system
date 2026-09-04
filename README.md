@@ -90,7 +90,7 @@ Docker is intentionally not included because it was a bonus requirement and not 
 
 ```text
 Patient Management System/
-├── backend/
+├── patient_management_system_BE/
 │   ├── alembic/
 │   │   └── versions/
 │   ├── app/
@@ -112,7 +112,7 @@ Patient Management System/
 │   ├── tests/
 │   ├── requirements.txt
 │   └── alembic.ini
-├── frontend/
+├── patient_management_syetem_FE/
 │   ├── public/
 │   ├── src/
 │   │   ├── components/
@@ -129,20 +129,28 @@ Patient Management System/
 Open a terminal in the project root.
 
 ```bash
-cd backend
+cd patient_management_system_BE
 python -m venv .venv
 .venv\Scripts\activate
 pip install -r requirements.txt
 copy .env.example .env
 ```
 
-Update `backend/.env` if your PostgreSQL connection is different:
+Update `patient_management_system_BE/.env` if your PostgreSQL connection is different:
 
 ```env
 DATABASE_URL=postgresql+psycopg://postgres:postgres@localhost:5432/patient_management
 SECRET_KEY=replace-with-a-long-random-secret
 CORS_ORIGINS=["http://localhost:5173","http://127.0.0.1:5173"]
 ```
+
+For local development without PostgreSQL installed, you can use a project-local SQLite database:
+
+```env
+DATABASE_URL=sqlite:///./patient_management.db
+```
+
+When SQLite is used, the backend creates the local tables automatically on startup.
 
 Run database migrations:
 
@@ -156,6 +164,13 @@ Start the backend:
 uvicorn app.main:app --reload
 ```
 
+If you prefer to stay in the project root, run:
+
+```bash
+alembic -c patient_management_system_BE/alembic.ini upgrade head
+uvicorn app.main:app --reload --app-dir patient_management_system_BE
+```
+
 Backend URLs:
 
 - API base: `http://localhost:8000/api/v1`
@@ -167,7 +182,7 @@ Backend URLs:
 Open a second terminal in the project root.
 
 ```bash
-cd frontend
+cd patient_management_syetem_FE
 npm install
 npm run dev
 ```
@@ -187,7 +202,7 @@ VITE_API_URL=http://localhost:8000/api/v1
 From the backend folder:
 
 ```bash
-cd backend
+cd patient_management_system_BE
 pytest
 ```
 
@@ -204,7 +219,7 @@ The test suite uses SQLite for speed and isolation. The application configuratio
 From the frontend folder:
 
 ```bash
-cd frontend
+cd patient_management_syetem_FE
 npm run build
 ```
 
