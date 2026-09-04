@@ -1,5 +1,6 @@
 import { CalendarDays, Info } from "lucide-react";
 import { doctorMeta } from "../../../lib/doctorMeta";
+import { formatTime } from "../../../lib/date";
 
 export default function AvailabilityPanel({ selected, date, setDate, slots, onBook }) {
   const meta = doctorMeta(selected);
@@ -17,7 +18,7 @@ export default function AvailabilityPanel({ selected, date, setDate, slots, onBo
           <div className="patient-slot-list">
             {slots.map((slot) => (
               <button key={slot.slot_time} disabled={!slot.available} onClick={() => onBook(slot.slot_time)} className={slot.available ? "slot" : "slot disabled"}>
-                {new Date(slot.slot_time).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}
+                {formatTime(slot.slot_time)}
               </button>
             ))}
             {!slots.length && <div className="info-strip"><Info size={16} /> No channeling sessions for this date.</div>}

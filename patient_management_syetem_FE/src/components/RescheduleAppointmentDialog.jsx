@@ -1,11 +1,11 @@
 import { CalendarDays, Check, Info, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { api, apiError } from "../api";
-import { formatWhen } from "../lib/date";
+import { appointmentDateIso, formatTime, formatWhen } from "../lib/date";
 
 export default function RescheduleAppointmentDialog({ appointment, doctors, notify, onSave, onClose }) {
   const [doctorId, setDoctorId] = useState(String(appointment.doctor_id));
-  const [date, setDate] = useState(new Date(appointment.slot_time).toISOString().slice(0, 10));
+  const [date, setDate] = useState(appointmentDateIso(appointment.slot_time));
   const [slots, setSlots] = useState([]);
   const [slotTime, setSlotTime] = useState("");
   const [loadingSlots, setLoadingSlots] = useState(false);
@@ -83,7 +83,7 @@ export default function RescheduleAppointmentDialog({ appointment, doctors, noti
               className={slotTime === slot.slot_time ? "slot active" : "slot"}
               onClick={() => setSlotTime(slot.slot_time)}
             >
-              {new Date(slot.slot_time).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}
+              {formatTime(slot.slot_time)}
             </button>
           ))}
           {!loadingSlots && !availableSlots.length && <div className="info-strip"><Info size={16} /> No available slots for this doctor and date.</div>}

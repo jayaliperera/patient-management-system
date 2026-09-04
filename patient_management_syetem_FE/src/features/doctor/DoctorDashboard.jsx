@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { api, apiError } from "../../api";
 import DoctorEditModal from "../../components/DoctorEditModal";
-import { todayIso } from "../../lib/date";
+import { addDaysIso, addMonthsIso, appointmentDateIso, todayIso } from "../../lib/date";
 import DoctorAppointmentsPage from "./components/DoctorAppointmentsPage";
 import DoctorHeader from "./components/DoctorHeader";
 import DoctorHero from "./components/DoctorHero";
@@ -60,16 +60,14 @@ export default function DoctorDashboard({ session, setSession, notify }) {
   }
 
   const grouped = useMemo(() => schedule.reduce((acc, item) => {
-    const key = new Date(item.slot_time).toISOString().slice(0, 10);
+    const key = appointmentDateIso(item.slot_time);
     acc[key] = [...(acc[key] || []), item];
     return acc;
   }, {}), [schedule]);
 
   function stepDate(direction) {
-    const next = new Date(`${date}T00:00:00`);
-    if (view === "month") next.setMonth(next.getMonth() + direction);
-    else next.setDate(next.getDate() + direction * (view === "week" ? 7 : 1));
-    setDate(next.toISOString().slice(0, 10));
+    if (view === "month") setDate(addMonthsIso(date, direction));
+    else setDate(addDaysIso(date, direction * (view === "week" ? 7 : 1)));
   }
 
   return (

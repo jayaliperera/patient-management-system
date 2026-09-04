@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { CalendarDays, ChevronRight, FileImage, FileText, FlaskConical, NotebookPen, Pill, Plus, Search, ShieldCheck } from "lucide-react";
 import { api, apiError } from "../../../api";
-import { formatWhen } from "../../../lib/date";
+import { formatDateOnly, formatWhen } from "../../../lib/date";
 
 const recordTabs = [
   { key: "all", label: "All Records", icon: FileText },
@@ -37,12 +37,12 @@ export default function DoctorRecordsPage({ notify }) {
     const patientMatch = patient === "all" || record.patient_name === patient;
     return searchMatch && patientMatch;
   });
-  const today = new Intl.DateTimeFormat("en-US", {
+  const today = formatDateOnly(new Date(), {
     weekday: "short",
     month: "short",
     day: "2-digit",
     year: "numeric",
-  }).format(new Date());
+  });
 
   return (
     <section className="records-page">

@@ -1,3 +1,5 @@
+import { SRI_LANKA_TIME_ZONE } from "./date";
+
 function pdfEscape(value) {
   return String(value ?? "")
     .replace(/\\/g, "\\\\")
@@ -11,6 +13,7 @@ function money(value) {
 
 function appointmentLines({ appointment, doctor, patientName, patientEmail }) {
   const when = new Intl.DateTimeFormat(undefined, {
+    timeZone: SRI_LANKA_TIME_ZONE,
     dateStyle: "full",
     timeStyle: "short",
   }).format(new Date(appointment.slot_time));
@@ -28,7 +31,7 @@ function appointmentLines({ appointment, doctor, patientName, patientEmail }) {
     ["Room", doctor?.room_number || "Not specified"],
     ["Doctor Phone", doctor?.phone || "Not specified"],
     ["Consultation Fee", money(doctor?.consultation_fee)],
-    ["Issued At", new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(new Date())],
+    ["Issued At", new Intl.DateTimeFormat(undefined, { timeZone: SRI_LANKA_TIME_ZONE, dateStyle: "medium", timeStyle: "short" }).format(new Date())],
   ];
 }
 

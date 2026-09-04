@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { CalendarCheck, CheckCircle, ChevronLeft, ChevronRight, Clock, RefreshCw, Search, XCircle } from "lucide-react";
 import { api, apiError } from "../../../api";
-import { formatWhen } from "../../../lib/date";
+import { addDaysIso, addMonthsIso, appointmentDateIso, formatWhen, todayIso } from "../../../lib/date";
 
 export default function DoctorAppointmentsPage({ notify, onStatsChanged, onNavigate }) {
   const [status, setStatus] = useState("ALL");
@@ -39,9 +39,9 @@ export default function DoctorAppointmentsPage({ notify, onStatsChanged, onNavig
     const dateMatch = matchesDateRange(item.slot_time, dateRange);
     return textMatch && dateMatch;
   });
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayIso();
   const counts = {
-    today: appointments.filter((item) => item.slot_time.slice(0, 10) === today).length,
+    today: appointments.filter((item) => appointmentDateIso(item.slot_time) === today).length,
     upcoming: appointments.filter((item) => item.status === "BOOKED").length,
     completed: appointments.filter((item) => item.status === "COMPLETED").length,
     cancelled: appointments.filter((item) => item.status === "CANCELLED").length,
@@ -137,29 +137,24 @@ export default function DoctorAppointmentsPage({ notify, onStatsChanged, onNavig
 function matchesDateRange(value, range) {
   if (!range) return true;
 
-  const appointmentDate = new Date(value);
-  const now = new Date();
-  const start = new Date(now);
-  start.setHours(0, 0, 0, 0);
+  const appointmentDate = appointmentDateIso(value);
+  let start = todayIso();
 
   if (range === "today") {
-    const end = new Date(start);
-    end.setDate(start.getDate() + 1);
+    const end = addDaysIso(start, 1);
     return appointmentDate >= start && appointmentDate < end;
   }
 
   if (range === "week") {
-    const day = (start.getDay() + 6) % 7;
-    start.setDate(start.getDate() - day);
-    const end = new Date(start);
-    end.setDate(start.getDate() + 7);
+    const day = new Date(`${start}T00:00:00Z`).getUTCDay();
+    start = addDaysIso(start, -((day + 6) % 7));
+    const end = addDaysIso(start, 7);
     return appointmentDate >= start && appointmentDate < end;
   }
 
   if (range === "month") {
-    start.setDate(1);
-    const end = new Date(start);
-    end.setMonth(start.getMonth() + 1);
+    start = `${start.slice(0, 8)}01`;
+    const end = addMonthsIso(start, 1);
     return appointmentDate >= start && appointmentDate < end;
   }
 

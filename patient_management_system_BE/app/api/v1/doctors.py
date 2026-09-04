@@ -1,10 +1,11 @@
-from datetime import date, datetime, time, timedelta, timezone
+from datetime import date, timedelta
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload
 
 from app.api.v1.dependencies import require_doctor
+from app.core.timezone import sri_lanka_day_bounds_utc, sri_lanka_now
 from app.db.database import get_db
 from app.db.models import Appointment, AppointmentStatus, Doctor, User
 from app.schemas import AppointmentRead, DoctorPatientRead, DoctorRead, DoctorRecordRead, DoctorStatsRead, DoctorUpdate, SlotRead
@@ -35,7 +36,7 @@ def my_schedule(
     current_user: User = Depends(require_doctor),
     db: Session = Depends(get_db),
 ):
-    selected = on or date.today()
+    selected = on or sri_lanka_now().date()
     if view == "day":
         start_date = selected
         days = 1
@@ -46,7 +47,7 @@ def my_schedule(
         start_date = selected.replace(day=1)
         next_month = start_date.replace(year=start_date.year + 1, month=1) if start_date.month == 12 else start_date.replace(month=start_date.month + 1)
         days = (next_month - start_date).days
-    start = datetime.combine(start_date, time.min).replace(tzinfo=timezone.utc)
+    start, _ = sri_lanka_day_bounds_utc(start_date)
     end = start + timedelta(days=days)
     query = (
         select(Appointment)

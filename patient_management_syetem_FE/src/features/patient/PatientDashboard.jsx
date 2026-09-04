@@ -5,7 +5,7 @@ import ConfirmDialog from "../../components/ConfirmDialog";
 import DoctorProfileModal from "../../components/DoctorProfileModal";
 import RescheduleAppointmentDialog from "../../components/RescheduleAppointmentDialog";
 import { downloadAppointmentReceipt } from "../../lib/receiptPdf";
-import { todayIso } from "../../lib/date";
+import { addDaysIso, pythonWeekday, todayIso } from "../../lib/date";
 import { doctorMeta } from "../../lib/doctorMeta";
 import AvailabilityPanel from "./components/AvailabilityPanel";
 import DoctorFinderPanel from "./components/DoctorFinderPanel";
@@ -344,18 +344,15 @@ export default function PatientDashboard({ session, setSession, notify }) {
 }
 
 function nextAvailableDate(doctor) {
-  const today = new Date();
+  const today = todayIso();
   const availability = doctor?.availability || [];
   if (!availability.length) return todayIso();
 
   const availableDays = new Set(availability.map((item) => item.day_of_week));
   for (let offset = 0; offset < 14; offset += 1) {
-    const candidate = new Date(today);
-    candidate.setDate(today.getDate() + offset);
-    const jsDay = candidate.getDay();
-    const pythonDay = (jsDay + 6) % 7;
-    if (availableDays.has(pythonDay)) {
-      return candidate.toISOString().slice(0, 10);
+    const candidate = addDaysIso(today, offset);
+    if (availableDays.has(pythonWeekday(candidate))) {
+      return candidate;
     }
   }
 
@@ -365,17 +362,13 @@ function nextAvailableDate(doctor) {
 function isDoctorAvailableOn(doctor, value) {
   const availability = doctor?.availability || [];
   if (!availability.length) return false;
-  const selected = new Date(`${value}T00:00:00`);
-  const pythonDay = (selected.getDay() + 6) % 7;
-  return availability.some((item) => item.day_of_week === pythonDay);
+  return availability.some((item) => item.day_of_week === pythonWeekday(value));
 }
 
 function nextSlotSortValue(doctor, value) {
   const availability = doctor?.availability || [];
   if (!availability.length) return Number.MAX_SAFE_INTEGER;
-  const selected = new Date(`${value}T00:00:00`);
-  const pythonDay = (selected.getDay() + 6) % 7;
-  const windows = availability.filter((item) => item.day_of_week === pythonDay);
+  const windows = availability.filter((item) => item.day_of_week === pythonWeekday(value));
   if (!windows.length) return Number.MAX_SAFE_INTEGER;
   return Math.min(...windows.map((item) => Number(item.start_time.replace(":", "").slice(0, 4))));
 }

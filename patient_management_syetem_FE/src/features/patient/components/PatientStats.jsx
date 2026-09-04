@@ -1,4 +1,5 @@
 import { CalendarDays, ClipboardList, Clock, Users } from "lucide-react";
+import { formatDateOnly } from "../../../lib/date";
 
 export default function PatientStats({ appointmentsCount, doctorsCount }) {
   const now = new Date();
@@ -7,8 +8,8 @@ export default function PatientStats({ appointmentsCount, doctorsCount }) {
     { label: "Doctors Online", value: doctorsCount, note: "Available for appointments", icon: Users },
     {
       label: "Today's Date",
-      value: new Intl.DateTimeFormat(undefined, { month: "short", day: "2-digit", year: "numeric" }).format(now),
-      note: new Intl.DateTimeFormat(undefined, { weekday: "long" }).format(now),
+      value: formatDateOnly(now, { month: "short", day: "2-digit", year: "numeric" }),
+      note: formatDateOnly(now, { weekday: "long" }),
       icon: Clock,
     },
     { label: "My Appointments", value: appointmentsCount, note: "Total appointments", icon: ClipboardList },

@@ -6,6 +6,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, joinedload
 
 from app.core.security import create_access_token, hash_password, verify_password
+from app.core.timezone import SRI_LANKA_TZ, sri_lanka_datetime_to_utc, sri_lanka_day_bounds_utc, sri_lanka_now
 from app.db.models import Appointment, AppointmentStatus, Doctor, DoctorAvailability, Patient, User, UserRole
 from app.schemas import AppointmentRead, AppointmentUpdate, DoctorPatientRead, DoctorRecordRead, DoctorStatsRead, DoctorUpdate, PatientUpdate, RegisterDoctor, RegisterPatient, UserRead
 
@@ -155,10 +156,10 @@ def generate_slots_for_date(db: Session, doctor: Doctor, slot_date: date) -> lis
     windows = [item for item in doctor.availability if item.day_of_week == slot_date.weekday()]
     if not windows:
         return []
-    start_of_day = datetime.combine(slot_date, time.min).replace(tzinfo=timezone.utc)
-    end_of_day = start_of_day + timedelta(days=1)
+    start_of_day, end_of_day = sri_lanka_day_bounds_utc(slot_date)
     booked = set(
-        db.scalars(
+        as_utc(value)
+        for value in db.scalars(
             select(Appointment.slot_time).where(
                 Appointment.doctor_id == doctor.id,
                 Appointment.status == AppointmentStatus.BOOKED,
@@ -170,10 +171,11 @@ def generate_slots_for_date(db: Session, doctor: Doctor, slot_date: date) -> lis
     now = datetime.now(timezone.utc)
     slots = []
     for window in windows:
-        cursor = datetime.combine(slot_date, window.start_time).replace(tzinfo=timezone.utc)
-        window_end = datetime.combine(slot_date, window.end_time).replace(tzinfo=timezone.utc)
+        cursor = datetime.combine(slot_date, window.start_time, tzinfo=SRI_LANKA_TZ)
+        window_end = datetime.combine(slot_date, window.end_time, tzinfo=SRI_LANKA_TZ)
         while cursor + timedelta(minutes=SLOT_MINUTES) <= window_end:
-            slots.append({"slot_time": cursor, "available": cursor > now and cursor not in booked})
+            slot_time = cursor.astimezone(timezone.utc)
+            slots.append({"slot_time": slot_time, "available": slot_time > now and slot_time not in booked})
             cursor += timedelta(minutes=SLOT_MINUTES)
     return slots
 
@@ -182,15 +184,16 @@ def ensure_slot_is_bookable(db: Session, doctor: Doctor, slot_time: datetime) ->
     slot_time = as_utc(slot_time)
     if slot_time <= datetime.now(timezone.utc):
         raise HTTPException(status_code=400, detail="Cannot book a past slot")
-    if slot_time.minute % SLOT_MINUTES != 0 or slot_time.second or slot_time.microsecond:
+    local_slot = slot_time.astimezone(SRI_LANKA_TZ)
+    if local_slot.minute % SLOT_MINUTES != 0 or local_slot.second or local_slot.microsecond:
         raise HTTPException(status_code=400, detail="Slot must align to a 30 minute boundary")
-    slot_clock = slot_time.time().replace(tzinfo=None)
+    slot_clock = local_slot.time().replace(tzinfo=None)
     matches = [
         item
         for item in doctor.availability
-        if item.day_of_week == slot_time.weekday()
+        if item.day_of_week == local_slot.weekday()
         and item.start_time <= slot_clock
-        and (datetime.combine(slot_time.date(), slot_clock) + timedelta(minutes=SLOT_MINUTES)).time() <= item.end_time
+        and (datetime.combine(local_slot.date(), slot_clock) + timedelta(minutes=SLOT_MINUTES)).time() <= item.end_time
     ]
     if not matches:
         raise HTTPException(status_code=400, detail="Slot is outside doctor's availability")
@@ -198,7 +201,7 @@ def ensure_slot_is_bookable(db: Session, doctor: Doctor, slot_time: datetime) ->
 
 def book_appointment(db: Session, patient: Patient, doctor_id: int, slot_time: datetime) -> Appointment:
     doctor = get_doctor_or_404(db, doctor_id)
-    normalized_slot = as_utc(slot_time)
+    normalized_slot = sri_lanka_datetime_to_utc(slot_time)
     ensure_slot_is_bookable(db, doctor, normalized_slot)
     appointment = Appointment(patient_id=patient.id, doctor_id=doctor.id, slot_time=normalized_slot)
     db.add(appointment)
@@ -229,7 +232,7 @@ def update_appointment(db: Session, patient: Patient, appointment_id: int, paylo
     if appointment.status != AppointmentStatus.BOOKED:
         raise HTTPException(status_code=409, detail="Only booked appointments can be rescheduled")
     doctor = get_doctor_or_404(db, payload.doctor_id)
-    normalized_slot = as_utc(payload.slot_time)
+    normalized_slot = sri_lanka_datetime_to_utc(payload.slot_time)
     ensure_slot_is_bookable(db, doctor, normalized_slot)
     appointment.doctor_id = doctor.id
     appointment.doctor = doctor
@@ -337,10 +340,10 @@ def doctor_records(db: Session, doctor: Doctor) -> list[DoctorRecordRead]:
 
 
 def doctor_stats(db: Session, doctor: Doctor) -> DoctorStatsRead:
-    now = datetime.now(timezone.utc)
-    today_start = datetime.combine(now.date(), time.min).replace(tzinfo=timezone.utc)
-    today_end = today_start + timedelta(days=1)
-    week_start = today_start - timedelta(days=today_start.weekday())
+    now = sri_lanka_now()
+    today = now.date()
+    today_start, today_end = sri_lanka_day_bounds_utc(today)
+    week_start, _ = sri_lanka_day_bounds_utc(today - timedelta(days=today.weekday()))
     week_end = week_start + timedelta(days=7)
     appointments = list(db.scalars(select(Appointment).where(Appointment.doctor_id == doctor.id)))
     return DoctorStatsRead(
@@ -356,7 +359,7 @@ def appointment_to_read(appointment: Appointment) -> AppointmentRead:
         id=appointment.id,
         doctor_id=appointment.doctor_id,
         patient_id=appointment.patient_id,
-        slot_time=appointment.slot_time,
+        slot_time=as_utc(appointment.slot_time),
         status=appointment.status,
         doctor_name=f"Dr. {appointment.doctor.first_name} {appointment.doctor.last_name}",
         patient_name=f"{appointment.patient.first_name} {appointment.patient.last_name}",

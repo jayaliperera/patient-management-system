@@ -1,5 +1,6 @@
 import { useRef } from "react";
 import { CalendarDays, CalendarPlus, ChevronLeft, ChevronRight, Clock, Plus, Users } from "lucide-react";
+import { addMonthsIso, formatDateOnly, formatTime, isoDateToDisplayDate, isoMonthDays } from "../../../lib/date";
 
 const hours = ["8:00 AM", "9:00 AM", "10:00 AM", "11:00 AM", "12:00 PM", "1:00 PM", "2:00 PM", "3:00 PM", "4:00 PM", "5:00 PM"];
 const weekdayLabels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -7,12 +8,12 @@ const weekdayLabels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 export default function DoctorSchedulePanel({ view, setView, date, setDate, grouped, onStepDate, fullPage = false, onAddAvailability, notify }) {
   const datePickerRef = useRef(null);
   const groups = Object.entries(grouped);
-  const selectedDate = new Date(`${date}T00:00:00`);
+  const selectedDate = isoDateToDisplayDate(date);
   const dayItems = grouped[date] || [];
-  const monthDays = buildMonthDays(selectedDate);
-  const monthTitle = selectedDate.toLocaleDateString([], { month: "long", year: "numeric" });
-  const controlDateTitle = selectedDate.toLocaleDateString("en-US", { month: "long", day: "2-digit", year: "numeric" });
-  const dateTitle = selectedDate.toLocaleDateString([], { weekday: "long", month: "long", day: "2-digit", year: "numeric" });
+  const monthDays = isoMonthDays(date);
+  const monthTitle = formatDateOnly(selectedDate, { month: "long", year: "numeric" });
+  const controlDateTitle = formatDateOnly(selectedDate, { month: "long", day: "2-digit", year: "numeric" });
+  const dateTitle = formatDateOnly(selectedDate, { weekday: "long", month: "long", day: "2-digit", year: "numeric" });
   const appointmentCount = groups.reduce((total, [, items]) => total + items.length, 0);
   const uniquePatients = new Set(groups.flatMap(([, items]) => items.map((item) => item.patient_id))).size;
 
@@ -30,9 +31,7 @@ export default function DoctorSchedulePanel({ view, setView, date, setDate, grou
   }
 
   function stepMonth(direction) {
-    const next = new Date(`${date}T00:00:00`);
-    next.setMonth(next.getMonth() + direction);
-    setDate(toIso(next));
+    setDate(addMonthsIso(date, direction));
   }
 
   return (
@@ -130,7 +129,7 @@ export default function DoctorSchedulePanel({ view, setView, date, setDate, grou
             {dayItems.map((item) => (
               <article key={item.id} className="schedule-event">
                 <strong>{item.patient_name}</strong>
-                <span>{new Date(item.slot_time).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })} - {item.status}</span>
+                <span>{formatTime(item.slot_time)} - {item.status}</span>
               </article>
             ))}
             {!dayItems.length && (
@@ -146,29 +145,4 @@ export default function DoctorSchedulePanel({ view, setView, date, setDate, grou
       </div>
     </section>
   );
-}
-
-function buildMonthDays(selectedDate) {
-  const year = selectedDate.getFullYear();
-  const month = selectedDate.getMonth();
-  const first = new Date(year, month, 1);
-  const start = new Date(first);
-  start.setDate(first.getDate() - first.getDay());
-
-  return Array.from({ length: 42 }, (_, index) => {
-    const day = new Date(start);
-    day.setDate(start.getDate() + index);
-    return {
-      iso: toIso(day),
-      number: day.getDate(),
-      inMonth: day.getMonth() === month,
-    };
-  });
-}
-
-function toIso(date) {
-  const year = date.getFullYear();
-  const month = `${date.getMonth() + 1}`.padStart(2, "0");
-  const day = `${date.getDate()}`.padStart(2, "0");
-  return `${year}-${month}-${day}`;
 }

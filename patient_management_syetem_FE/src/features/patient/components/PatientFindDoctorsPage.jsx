@@ -2,7 +2,7 @@ import { Brain, CalendarDays, ChevronRight, HeartPulse, MapPin, Search, Stethosc
 import { specialties } from "../../../lib/constants";
 import { doctorImage } from "../../../lib/doctorAssets";
 import { doctorMeta } from "../../../lib/doctorMeta";
-import { formatWhen } from "../../../lib/date";
+import { formatDateOnly, formatWhen } from "../../../lib/date";
 import AvailabilityPanel from "./AvailabilityPanel";
 import PatientPageShell from "./PatientPageShell";
 
@@ -100,7 +100,7 @@ export default function PatientFindDoctorsPage({
             <h2><CalendarDays size={22} /> My Next Appointment</h2>
             {nextAppointment ? (
               <div>
-                <strong>{new Date(nextAppointment.slot_time).toLocaleString(undefined, { month: "short" })}<br /><span>{new Date(nextAppointment.slot_time).getDate()}</span></strong>
+                <strong>{formatDateOnly(nextAppointment.slot_time, { month: "short" })}<br /><span>{formatDateOnly(nextAppointment.slot_time, { day: "numeric" })}</span></strong>
                 <p>{nextAppointment.doctor_name}<br /><small>{formatWhen(nextAppointment.slot_time)}</small></p>
               </div>
             ) : (
