@@ -23,7 +23,6 @@ import { api, apiError } from "../../../api";
 import AvailabilityEditor from "../../../components/AvailabilityEditor";
 import { blankAvailability } from "../../../lib/constants";
 import { doctorImage } from "../../../lib/doctorAssets";
-import { doctorMeta } from "../../../lib/doctorMeta";
 
 const settingTabs = [
   { key: "profile", label: "Profile Information", icon: User },
@@ -33,15 +32,22 @@ const settingTabs = [
   { key: "security", label: "Account & Security", icon: ShieldCheck },
 ];
 
+function editableSpecialty(value) {
+  return value && /[a-z]/i.test(value) ? value : "";
+}
+
 export default function DoctorSettingsPage({ profile, session, notify, onSaved, onLogout, onNavigate }) {
-  const meta = doctorMeta(profile);
   const initialForm = {
     first_name: profile?.first_name || "",
     last_name: profile?.last_name || "",
-    specialty: profile?.specialty || "",
-    phone: "+94 77 123 4567",
-    registration: `SLMC ${67800 + (profile?.id || 1)}`,
-    bio: `Consultant ${profile?.specialty || "Doctor"} with over ${meta.experience} years of experience in preventive care, accurate diagnosis, and patient-centered treatment.`,
+    specialty: editableSpecialty(profile?.specialty),
+    phone: profile?.phone || "",
+    hospital: profile?.hospital || "",
+    registration_number: profile?.registration_number || "",
+    bio: profile?.bio || "",
+    experience_years: profile?.experience_years ?? 0,
+    consultation_fee: profile?.consultation_fee ?? "",
+    room_number: profile?.room_number || "",
     availability: profile?.availability?.length ? profile.availability.map(({ day_of_week, start_time, end_time }) => ({
       day_of_week,
       start_time: start_time.slice(0, 5),
@@ -55,7 +61,19 @@ export default function DoctorSettingsPage({ profile, session, notify, onSaved, 
     event.preventDefault();
     try {
       const { first_name, last_name, specialty, availability } = form;
-      const { data } = await api.put("/doctors/me/profile", { first_name, last_name, specialty, availability });
+      const { data } = await api.put("/doctors/me/profile", {
+        first_name,
+        last_name,
+        specialty,
+        phone: form.phone,
+        hospital: form.hospital,
+        registration_number: form.registration_number,
+        bio: form.bio,
+        experience_years: Number(form.experience_years || 0),
+        consultation_fee: form.consultation_fee === "" ? null : Number(form.consultation_fee),
+        room_number: form.room_number,
+        availability,
+      });
       notify("Settings saved.");
       onSaved(data);
     } catch (error) {
@@ -118,11 +136,19 @@ export default function DoctorSettingsPage({ profile, session, notify, onSaved, 
               </div>
               <div className="two-col">
                 <label>Email address<span className="settings-readonly-field"><Mail size={18} /> {session?.user.email}</span></label>
-                <label>Phone number<span className="settings-readonly-field"><Phone size={18} /> {form.phone}</span></label>
+                <label>Phone number<span className="settings-readonly-field editable-field"><Phone size={18} /><input value={form.phone} onChange={(event) => setForm({ ...form, phone: event.target.value })} placeholder="Enter phone number" /></span></label>
               </div>
               <div className="two-col">
                 <label>Specialty<input value={form.specialty} onChange={(event) => setForm({ ...form, specialty: event.target.value })} required /></label>
-                <label>Registration number<span className="settings-readonly-field"><ShieldCheck size={18} /> {form.registration}</span></label>
+                <label>Hospital<input value={form.hospital} onChange={(event) => setForm({ ...form, hospital: event.target.value })} placeholder="Enter hospital or clinic" /></label>
+              </div>
+              <div className="two-col">
+                <label>Registration number<span className="settings-readonly-field editable-field"><ShieldCheck size={18} /><input value={form.registration_number} onChange={(event) => setForm({ ...form, registration_number: event.target.value })} placeholder="Enter registration number" /></span></label>
+                <label>Experience years<input type="number" min="0" value={form.experience_years} onChange={(event) => setForm({ ...form, experience_years: Number(event.target.value) })} /></label>
+              </div>
+              <div className="two-col">
+                <label>Consultation fee<input type="number" min="0" value={form.consultation_fee} onChange={(event) => setForm({ ...form, consultation_fee: event.target.value })} placeholder="Enter fee" /></label>
+                <label>Room number<input value={form.room_number} onChange={(event) => setForm({ ...form, room_number: event.target.value })} placeholder="Enter room number" /></label>
               </div>
               <label>Bio / About you<textarea maxLength={300} value={form.bio} onChange={(event) => setForm({ ...form, bio: event.target.value })} /></label>
               <small className="settings-count">{form.bio.length}/300</small>

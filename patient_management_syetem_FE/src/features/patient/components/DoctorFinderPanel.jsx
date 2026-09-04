@@ -7,6 +7,11 @@ export default function DoctorFinderPanel({
   setQuery,
   specialty,
   setSpecialty,
+  locationFilter,
+  setLocationFilter,
+  locations,
+  date,
+  setDate,
   doctors,
   selected,
   setSelected,
@@ -26,6 +31,12 @@ export default function DoctorFinderPanel({
         <div className="compact-search">
           <Search size={18} />
           <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search doctor name or specialty..." />
+        </div>
+        <div className="finder-filter-controls">
+          <select value={locationFilter} onChange={(event) => setLocationFilter(event.target.value)}>
+            {locations.map((location) => <option key={location} value={location}>{location === "All" ? "All Locations" : location}</option>)}
+          </select>
+          <input type="date" value={date} onChange={(event) => setDate(event.target.value)} />
         </div>
         <div className="chip-row">
           {specialties.map((item) => (

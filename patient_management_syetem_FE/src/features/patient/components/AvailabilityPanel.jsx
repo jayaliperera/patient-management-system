@@ -13,7 +13,7 @@ export default function AvailabilityPanel({ selected, date, setDate, slots, onBo
       {selected ? (
         <>
           <h4>Dr. {selected.first_name} {selected.last_name}</h4>
-          <p>{selected.specialty} - {meta.hospital} - {meta.room}</p>
+          <p>{meta.specialty} - {meta.hospital} - {meta.room}</p>
           <div className="patient-slot-list">
             {slots.map((slot) => (
               <button key={slot.slot_time} disabled={!slot.available} onClick={() => onBook(slot.slot_time)} className={slot.available ? "slot" : "slot disabled"}>
