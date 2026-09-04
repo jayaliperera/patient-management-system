@@ -22,10 +22,10 @@ export default function FeaturedDoctorCard({ doctor, selected, onSelect, onProfi
         </div>
         <div>
           <h3>Dr. {doctor.first_name} {doctor.last_name}</h3>
-          <p>{doctor.specialty} at {meta.hospital}</p>
+          <p>{meta.specialty} at {meta.hospital}</p>
           <div className="mini-meta">
             <span><Star size={14} /> {meta.rating}</span>
-            <span><Coins size={14} /> Rs. {meta.fee}</span>
+            <span><Coins size={14} /> {meta.fee ? `Rs. ${meta.fee}` : "Fee not set"}</span>
             <span><Clock size={14} /> {meta.experience} yrs</span>
           </div>
         </div>
