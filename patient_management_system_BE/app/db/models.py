@@ -1,7 +1,7 @@
 from datetime import datetime, time, timezone
 from enum import Enum
 
-from sqlalchemy import DateTime, Enum as SqlEnum, ForeignKey, Index, Integer, String, Time, UniqueConstraint
+from sqlalchemy import DateTime, Enum as SqlEnum, Float, ForeignKey, Index, Integer, String, Text, Time, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.database import Base
@@ -52,6 +52,14 @@ class Doctor(Base):
     first_name: Mapped[str] = mapped_column(String(100), nullable=False)
     last_name: Mapped[str] = mapped_column(String(100), nullable=False)
     specialty: Mapped[str] = mapped_column(String(120), index=True, nullable=False)
+    phone: Mapped[str | None] = mapped_column(String(32))
+    hospital: Mapped[str | None] = mapped_column(String(160))
+    registration_number: Mapped[str | None] = mapped_column(String(80))
+    bio: Mapped[str | None] = mapped_column(Text)
+    experience_years: Mapped[int] = mapped_column(Integer, default=0)
+    consultation_fee: Mapped[int | None] = mapped_column(Integer)
+    room_number: Mapped[str | None] = mapped_column(String(80))
+    rating: Mapped[float] = mapped_column(Float, default=0.0)
 
     user: Mapped[User] = relationship(back_populates="doctor")
     availability: Mapped[list["DoctorAvailability"]] = relationship(back_populates="doctor", cascade="all, delete-orphan")

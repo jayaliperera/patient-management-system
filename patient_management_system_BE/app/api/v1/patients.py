@@ -4,11 +4,16 @@ from sqlalchemy.orm import Session
 from app.api.v1.dependencies import require_patient
 from app.db.database import get_db
 from app.db.models import User
-from app.schemas import PatientUpdate, UserRead
+from app.schemas import PatientRead, PatientUpdate, UserRead
 from app.services import update_patient_profile, user_to_read
 
 
 router = APIRouter()
+
+
+@router.get("/me/profile", response_model=PatientRead)
+def my_profile(current_user: User = Depends(require_patient)):
+    return current_user.patient
 
 
 @router.put("/me/profile", response_model=UserRead)

@@ -36,6 +36,13 @@ class RegisterDoctor(BaseModel):
     first_name: str
     last_name: str
     specialty: str
+    phone: str | None = None
+    hospital: str | None = None
+    registration_number: str | None = None
+    bio: str | None = None
+    experience_years: int = Field(default=0, ge=0)
+    consultation_fee: int | None = Field(default=None, ge=0)
+    room_number: str | None = None
     availability: list[AvailabilityCreate] = []
 
 
@@ -49,6 +56,13 @@ class DoctorUpdate(BaseModel):
     first_name: str
     last_name: str
     specialty: str
+    phone: str | None = None
+    hospital: str | None = None
+    registration_number: str | None = None
+    bio: str | None = None
+    experience_years: int = Field(default=0, ge=0)
+    consultation_fee: int | None = Field(default=None, ge=0)
+    room_number: str | None = None
     availability: list[AvailabilityCreate] = []
 
 
@@ -58,6 +72,15 @@ class UserRead(BaseModel):
     role: UserRole
     profile_id: int
     name: str
+
+
+class PatientRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    first_name: str
+    last_name: str
+    phone: str | None = None
 
 
 class AvailabilityRead(BaseModel):
@@ -76,6 +99,14 @@ class DoctorRead(BaseModel):
     first_name: str
     last_name: str
     specialty: str
+    phone: str | None = None
+    hospital: str | None = None
+    registration_number: str | None = None
+    bio: str | None = None
+    experience_years: int = 0
+    consultation_fee: int | None = None
+    room_number: str | None = None
+    rating: float = 0
     availability: list[AvailabilityRead] = []
 
 
@@ -85,6 +116,11 @@ class SlotRead(BaseModel):
 
 
 class AppointmentCreate(BaseModel):
+    doctor_id: int
+    slot_time: datetime
+
+
+class AppointmentUpdate(BaseModel):
     doctor_id: int
     slot_time: datetime
 

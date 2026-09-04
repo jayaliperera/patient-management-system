@@ -7,9 +7,11 @@ from sqlalchemy.orm import Session, joinedload
 
 from app.core.security import create_access_token, hash_password, verify_password
 from app.db.models import Appointment, AppointmentStatus, Doctor, DoctorAvailability, Patient, User, UserRole
-from app.schemas import AppointmentRead, DoctorPatientRead, DoctorRecordRead, DoctorStatsRead, DoctorUpdate, PatientUpdate, RegisterDoctor, RegisterPatient, UserRead
+from app.schemas import AppointmentRead, AppointmentUpdate, DoctorPatientRead, DoctorRecordRead, DoctorStatsRead, DoctorUpdate, PatientUpdate, RegisterDoctor, RegisterPatient, UserRead
+
 
 SLOT_MINUTES = 30
+
 
 def user_to_read(user: User) -> UserRead:
     if user.role == UserRole.PATIENT and user.patient:
@@ -41,7 +43,19 @@ def register_patient(db: Session, payload: RegisterPatient) -> User:
 
 
 def register_doctor(db: Session, payload: RegisterDoctor) -> User:
-    doctor = Doctor(first_name=payload.first_name, last_name=payload.last_name, specialty=payload.specialty)
+    validate_specialty(payload.specialty)
+    doctor = Doctor(
+        first_name=payload.first_name,
+        last_name=payload.last_name,
+        specialty=payload.specialty,
+        phone=payload.phone,
+        hospital=payload.hospital,
+        registration_number=payload.registration_number,
+        bio=payload.bio,
+        experience_years=payload.experience_years,
+        consultation_fee=payload.consultation_fee,
+        room_number=payload.room_number,
+    )
     for item in payload.availability:
         if item.start_time >= item.end_time:
             raise HTTPException(status_code=422, detail="Availability start_time must be before end_time")
@@ -90,9 +104,17 @@ def get_doctor_or_404(db: Session, doctor_id: int) -> Doctor:
 
 
 def update_doctor_profile(db: Session, doctor: Doctor, payload: DoctorUpdate) -> Doctor:
+    validate_specialty(payload.specialty)
     doctor.first_name = payload.first_name
     doctor.last_name = payload.last_name
     doctor.specialty = payload.specialty
+    doctor.phone = payload.phone
+    doctor.hospital = payload.hospital
+    doctor.registration_number = payload.registration_number
+    doctor.bio = payload.bio
+    doctor.experience_years = payload.experience_years
+    doctor.consultation_fee = payload.consultation_fee
+    doctor.room_number = payload.room_number
     doctor.availability.clear()
     db.flush()
     seen_windows: set[tuple[int, time, time]] = set()
@@ -122,6 +144,11 @@ def update_patient_profile(db: Session, patient: Patient, payload: PatientUpdate
     db.commit()
     db.refresh(patient)
     return patient
+
+
+def validate_specialty(value: str) -> None:
+    if not any(character.isalpha() for character in value):
+        raise HTTPException(status_code=422, detail="Specialty must be a valid medical specialty name")
 
 
 def generate_slots_for_date(db: Session, doctor: Doctor, slot_date: date) -> list[dict]:
@@ -184,12 +211,40 @@ def book_appointment(db: Session, patient: Patient, doctor_id: int, slot_time: d
     return appointment
 
 
-def cancel_appointment(db: Session, appointment_id: int, patient: Patient) -> Appointment:
-    appointment = db.get(Appointment, appointment_id)
+def get_patient_appointment_or_404(db: Session, patient: Patient, appointment_id: int) -> Appointment:
+    appointment = db.scalar(
+        select(Appointment)
+        .where(Appointment.id == appointment_id)
+        .options(joinedload(Appointment.patient), joinedload(Appointment.doctor))
+    )
     if not appointment:
         raise HTTPException(status_code=404, detail="Appointment not found")
     if appointment.patient_id != patient.id:
-        raise HTTPException(status_code=403, detail="Cannot cancel another patient's appointment")
+        raise HTTPException(status_code=403, detail="Cannot manage another patient's appointment")
+    return appointment
+
+
+def update_appointment(db: Session, patient: Patient, appointment_id: int, payload: AppointmentUpdate) -> Appointment:
+    appointment = get_patient_appointment_or_404(db, patient, appointment_id)
+    if appointment.status != AppointmentStatus.BOOKED:
+        raise HTTPException(status_code=409, detail="Only booked appointments can be rescheduled")
+    doctor = get_doctor_or_404(db, payload.doctor_id)
+    normalized_slot = as_utc(payload.slot_time)
+    ensure_slot_is_bookable(db, doctor, normalized_slot)
+    appointment.doctor_id = doctor.id
+    appointment.doctor = doctor
+    appointment.slot_time = normalized_slot
+    try:
+        db.commit()
+    except IntegrityError as exc:
+        db.rollback()
+        raise HTTPException(status_code=409, detail="This appointment slot is already booked.") from exc
+    db.refresh(appointment)
+    return appointment
+
+
+def cancel_appointment(db: Session, appointment_id: int, patient: Patient) -> Appointment:
+    appointment = get_patient_appointment_or_404(db, patient, appointment_id)
     if appointment.status != AppointmentStatus.BOOKED:
         raise HTTPException(status_code=409, detail="Appointment is already cancelled or completed")
     appointment.status = AppointmentStatus.CANCELLED
@@ -197,6 +252,12 @@ def cancel_appointment(db: Session, appointment_id: int, patient: Patient) -> Ap
     db.commit()
     db.refresh(appointment)
     return appointment
+
+
+def delete_appointment(db: Session, patient: Patient, appointment_id: int) -> None:
+    appointment = get_patient_appointment_or_404(db, patient, appointment_id)
+    db.delete(appointment)
+    db.commit()
 
 
 def get_doctor_appointment_or_404(db: Session, doctor: Doctor, appointment_id: int) -> Appointment:

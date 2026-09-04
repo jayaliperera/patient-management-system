@@ -44,6 +44,13 @@ def register_doctor(client, email="doctor@example.com"):
             "first_name": "Anil",
             "last_name": "Perera",
             "specialty": "Cardiology",
+            "phone": "+94 77 123 4567",
+            "hospital": "CareSlot Medical Center",
+            "registration_number": "SLMC 67823",
+            "bio": "Consultant cardiologist focused on patient-centered care.",
+            "experience_years": 7,
+            "consultation_fee": 2500,
+            "room_number": "Room 121",
             "availability": [{"day_of_week": 0, "start_time": "09:00", "end_time": "12:00"}],
         },
     )
