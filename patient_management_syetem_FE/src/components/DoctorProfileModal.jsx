@@ -13,14 +13,14 @@ export default function DoctorProfileModal({ doctor, onClose, onSelect }) {
           <span className="doctor-photo large"><Stethoscope size={38} /></span>
           <div>
             <h2>Dr. {doctor.first_name} {doctor.last_name}</h2>
-            <p>{doctor.specialty}</p>
+            <p>{meta.specialty}</p>
           </div>
         </div>
         <div className="profile-facts">
           <span><BadgeCheck size={18} /> {meta.rating} patient rating</span>
           <span><MapPin size={18} /> {meta.hospital}</span>
           <span><Clock size={18} /> {meta.experience} years experience</span>
-          <span><Coins size={18} /> Rs. {meta.fee} channeling fee</span>
+          <span><Coins size={18} /> {meta.fee ? `Rs. ${meta.fee}` : "Channeling fee not set"}</span>
         </div>
         <h3>Weekly Sessions</h3>
         <div className="schedule-chips">

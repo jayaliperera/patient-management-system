@@ -27,6 +27,12 @@ export default function AuthScreen({ mode, setMode, setSession, notify }) {
     last_name: "",
     phone: "",
     specialty: "Cardiology",
+    hospital: "",
+    registration_number: "",
+    bio: "",
+    experience_years: 0,
+    consultation_fee: "",
+    room_number: "",
   });
   const [availability, setAvailability] = useState(blankAvailability);
   const [loading, setLoading] = useState(false);
@@ -43,7 +49,11 @@ export default function AuthScreen({ mode, setMode, setSession, notify }) {
           ? { email: form.email, password: form.password }
           : role === "PATIENT"
             ? form
-            : { ...form, availability };
+            : {
+              ...form,
+              consultation_fee: form.consultation_fee === "" ? null : Number(form.consultation_fee),
+              availability,
+            };
       const { data } = await api.post(endpoint, payload);
       setSession(data);
       notify(mode === "login" ? "Welcome back." : "Account created.");
@@ -141,6 +151,22 @@ export default function AuthScreen({ mode, setMode, setSession, notify }) {
                 <IconField icon={<Stethoscope size={19} />} label="Specialty">
                   <input value={form.specialty} onChange={(event) => setForm({ ...form, specialty: event.target.value })} required />
                 </IconField>
+                <div className="two-col">
+                  <IconField icon={<Users size={19} />} label="Phone">
+                    <input autoComplete="tel" placeholder="Enter your phone number" value={form.phone} onChange={(event) => setForm({ ...form, phone: event.target.value })} />
+                  </IconField>
+                  <IconField icon={<CalendarCheck size={19} />} label="Hospital">
+                    <input placeholder="Enter hospital or clinic" value={form.hospital} onChange={(event) => setForm({ ...form, hospital: event.target.value })} />
+                  </IconField>
+                </div>
+                <div className="two-col">
+                  <IconField icon={<ShieldCheck size={19} />} label="Registration No.">
+                    <input placeholder="Enter registration number" value={form.registration_number} onChange={(event) => setForm({ ...form, registration_number: event.target.value })} />
+                  </IconField>
+                  <IconField icon={<CalendarCheck size={19} />} label="Experience">
+                    <input type="number" min="0" placeholder="Years" value={form.experience_years} onChange={(event) => setForm({ ...form, experience_years: Number(event.target.value) })} />
+                  </IconField>
+                </div>
                 <AvailabilityEditor availability={availability} setAvailability={setAvailability} />
               </>
             )}
